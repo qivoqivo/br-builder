@@ -20,21 +20,18 @@ MANUAL_FILENAME_FIXES = {
     "Washi": "Washi.png"
 }
 
-# --- TWOJA BAZA PRZEDMIOTÓW (1:1) ---
+# --- TWOJA PEŁNA BAZA PRZEDMIOTÓW (1:1 Z MAINA) ---
 ITEMS_DB = {
-    # === EPIKI (RANGA IX) ===
-    "Allenor": {"rank": 9, "cap": 25, "slots": 2, "type": "Miecz", "fixed_driffs": ["astah", "band"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Siła": "+15", "Zręczność": "+15", "PŻ": "+250", "Kondycja": "+50", "Obrażenia": "100"}},
-    "Attawa": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["band", "oda"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Moc": "+15", "Wiedza": "+30", "PŻ": "+100", "Mana": "+50", "Obrażenia": "120"}},
-    "Gorthdar": {"rank": 9, "cap": 25, "slots": 2, "type": "Topór dwuręczny", "fixed_driffs": ["unn", "band"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Siła": "+25", "Zręczność": "+15", "PŻ": "+150", "Kondycja": "+50", "Obrażenia": "130"}},
-    "Imisindo": {"rank": 9, "cap": 25, "slots": 2, "type": "Łuk", "fixed_driffs": ["band", "ling"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Siła": "+15", "Zręczność": "+20", "PŻ": "+200", "Kondycja": "+50", "Obrażenia": "105"}},
-    "Latarnia Życia": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["err", "band"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Moc": "+20", "Wiedza": "+25", "PŻ": "+100", "Mana": "+50", "Obrażenia": "120"}},
-    "Washi": {"rank": 9, "cap": 25, "slots": 2, "type": "Kastety", "fixed_driffs": ["band", "ulk"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Siła": "+15", "Zręczność": "+20", "PŻ": "+200", "Kondycja": "+50", "Obrażenia": "115"}},
-    "Żmij": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["band", "teld"], "stats": {"Wartość": "3 000 000", "Wymagany poziom": "60", "Moc": "+30", "Wiedza": "+15", "PŻ": "+150", "Obrażenia": "120"}},
-
-    # === RARY ===
-    "Oko": {"rank": 5, "cap": 10, "slots": 2, "type": "Pierścień", "stats": {"Wartość": "1.2mln", "PŻ": "+160", "Mana": "+70"}},
-    "Derengil": {"rank": 2, "cap": 4, "slots": 1, "type": "Miecz", "stats": {"Wartość": "36 000 złota", "Siła": "+8", "Zręczność": "+6", "Kondycja": "+40"}},
-    "Maiarot": {"rank": 2, "cap": 4, "slots": 1, "type": "Naszyjnik", "stats": {"Wartość": "36 000 złota", "PŻ": "+120", "Odporność uroki": "+20"}},
+    "Allenor": {"rank": 9, "cap": 25, "slots": 2, "type": "Miecz", "fixed_driffs": ["astah", "band"], "stats": {"Siła": "+15", "Zręczność": "+15", "PŻ": "+250", "Kondycja": "+50", "Obrażenia": "100"}},
+    "Attawa": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["band", "oda"], "stats": {"Moc": "+15", "Wiedza": "+30", "PŻ": "+100", "Mana": "+50", "Obrażenia": "120"}},
+    "Gorthdar": {"rank": 9, "cap": 25, "slots": 2, "type": "Topór dwuręczny", "fixed_driffs": ["unn", "band"], "stats": {"Siła": "+25", "Zręczność": "+15", "PŻ": "+150", "Kondycja": "+50", "Obrażenia": "130"}},
+    "Imisindo": {"rank": 9, "cap": 25, "slots": 2, "type": "Łuk", "fixed_driffs": ["band", "ling"], "stats": {"Siła": "+15", "Zręczność": "+20", "PŻ": "+200", "Kondycja": "+50", "Obrażenia": "105"}},
+    "Latarnia Życia": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["err", "band"], "stats": {"Moc": "+20", "Wiedza": "+25", "PŻ": "+100", "Mana": "+50", "Obrażenia": "120"}},
+    "Washi": {"rank": 9, "cap": 25, "slots": 2, "type": "Kastety", "fixed_driffs": ["band", "ulk"], "stats": {"Siła": "+15", "Zręczność": "+20", "PŻ": "+200", "Kondycja": "+50", "Obrażenia": "115"}},
+    "Żmij": {"rank": 9, "cap": 25, "slots": 2, "type": "Kije", "fixed_driffs": ["band", "teld"], "stats": {"Moc": "+30", "Wiedza": "+15", "PŻ": "+150", "Obrażenia": "120"}},
+    "Oko": {"rank": 5, "cap": 10, "slots": 2, "type": "Pierścień", "stats": {"PŻ": "+160", "Mana": "+70"}},
+    "Derengil": {"rank": 2, "cap": 4, "slots": 1, "type": "Miecz", "stats": {"Siła": "+8", "Zręczność": "+6", "Kondycja": "+40"}},
+    "Maiarot": {"rank": 2, "cap": 4, "slots": 1, "type": "Naszyjnik", "stats": {"PŻ": "+120", "Odporność uroki": "+20"}},
     "Sturprang": {"rank": 2, "cap": 4, "slots": 1, "type": "Laska", "stats": {"Moc": "+8", "Wiedza": "+6", "Mana": "+40"}},
     "Arcanscape": {"rank": 2, "cap": 4, "slots": 1, "type": "Pierścień", "stats": {"PŻ": "+70", "Mana": "+20", "Kondycja": "+20"}},
     "Ayol": {"rank": 2, "cap": 4, "slots": 1, "type": "Łuk", "stats": {"Siła": "+5", "Zręczność": "+9", "Kondycja": "+60"}},
@@ -194,7 +191,7 @@ ITEMS_DB = {
     "Wyrok Hellara": {"rank": 12, "cap": 32, "slots": 3, "type": "Pas", "stats": {"Moc": "+52", "Wiedza": "+72"}}
 }
 
-# --- MAPOWANIE SLOTÓW (1:1) ---
+# --- MAPOWANIE SLOTÓW (Poprawione o ID z script.js) ---
 SLOT_MAPPING = {
     "head": ["Hełm"], 
     "neck": ["Naszyjnik"], 
@@ -208,10 +205,10 @@ SLOT_MAPPING = {
     "body": ["Zbroja"], 
     "cape": ["Peleryna"], 
     "shield": ["Tarcza"],
-    "weapon": ["Broń", "Miecz", "Miecz dwuręczny", "Laska", "Łuk", "Topór", "Topór dwuręczny", "Młot", "Młot dwuręczny", "Kastety", "Kije"]
+    "weapon": ["Broń", "Miecz", "Miecz dwuręczny", "Miecz 2H", "Laska", "Łuk", "Topór", "Topór dwuręczny", "Topór 2H", "Młot", "Młot dwuręczny", "Młot 2H", "Kastety", "Kije"]
 }
 
-# --- FUNKCJA SKANUJĄCA PLIKI (Z DOPASOWANIEM DO /static/) ---
+# --- FUNKCJA SKANUJĄCA PLIKI (POPRAWIONA ŚCIEŻKA DLA FLASKA) ---
 def find_image_file(item_name):
     # 1. Mapa ręczna
     if item_name in MANUAL_FILENAME_FIXES:
@@ -222,20 +219,15 @@ def find_image_file(item_name):
         return fname, "rary"
 
     # 2. Automatyczne szukanie
-    folders_to_check = ['epik', 'rary']
     target = item_name.lower().replace(" ", "").replace("'", "").replace("-", "")
-
-    for folder in folders_to_check:
+    for folder in ['epik', 'rary']:
         img_dir = os.path.join(app.root_path, 'static', folder)
         if not os.path.exists(img_dir): continue
-
         for filename in os.listdir(img_dir):
             name_no_ext = os.path.splitext(filename)[0]
             cleaned_file = name_no_ext.lower().replace(" ", "").replace("_", "").replace("'", "").replace("-", "")
-            
             if target == cleaned_file or (len(target) > 3 and target in cleaned_file):
                 return filename, folder
-            
     return "default.png", "rary"
 
 @app.route('/')
@@ -244,22 +236,16 @@ def index():
 
 @app.route('/get_items/<slot_id>')
 def get_items_list(slot_id):
-    # Ring handling: Mapujemy ring1/ring2 na 'Pierścień'
-    search_slot = "ring" if "ring" in slot_id else slot_id
-    valid_types = SLOT_MAPPING.get(search_slot, [])
-    
+    valid_types = SLOT_MAPPING.get(slot_id, [])
     result = {}
     for name, data in ITEMS_DB.items():
         if data['type'] in valid_types:
             real_filename, folder_name = find_image_file(name)
-            
             item_data = data.copy()
             item_data['img'] = real_filename
             item_data['folder'] = folder_name
             result[name] = item_data
-            
     return jsonify(result)
 
 if __name__ == '__main__':
-    # Render używa gunicorna, ale do testów lokalnych:
     app.run(debug=True)
