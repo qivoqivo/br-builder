@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Broken Ranks Builder Pro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="left-panel">
+            <div class="wheel-container" id="wheel">
+                <div class="center-stats">
+                    <h1>7861</h1>
+                    <p style="color:#666; margin-bottom: 15px;">Moc zestawu</p>
+                    <img src="/static/mod_sum.png" class="summary-icon" onmouseenter="showGlobalTooltip(event)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" alt="Spis Modyfikatorów">
+                    
+                    <br>
+                    <button onclick="openAutoDriffPanel()" style="margin-top:20px; background: #00adb5; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 0 10px rgba(0,173,181,0.5); pointer-events: auto;">
+                        AUTO-DRIFY
+                    </button>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; pointer-events: auto;">
+                        <button onclick="resetBuild()" style="background: #d9534f; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">RESET</button>
+                        <button onclick="saveBuild()" style="background: #f0ad4e; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">ZAPISZ</button>
+                        <button onclick="loadBuild()" style="background: #5cb85c; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">WCZYTAJ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2 id="panel-title" style="color:#ffaa00; border-bottom:1px solid #333; padding-bottom:10px;">WYBIERZ SLOT</h2>
+            <div class="item-grid" id="item-grid">
+                <p style="color:#555; padding:10px;">Kliknij element na kole...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="driff-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3 id="overlay-title">WYBIERZ ULEPSZENIE</h3>
+                <button class="close-btn" onclick="closeOverlay()">✕</button>
+            </div>
+            
+            <div class="driff-categories" id="driff-categories"></div>
+            <div class="driff-list" id="driff-list"></div>
+
+            <div class="driff-controls" id="driff-controls">
+                <div class="selected-preview">
+                    <img id="preview-img" src="" alt="Driff">
+                    <div>
+                        <div id="preview-name" class="t-gold">Nazwa Driffa</div>
+                        <div style="font-size:12px; color:#aaa;">Ustaw poziom:</div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <input type="range" id="lvl-slider" min="1" max="21" value="1" oninput="updateSliderVal(this.value)">
+                    <span id="lvl-display">1</span>
+                </div>
+                
+                <div id="cap-info">Pojemność: -/-</div>
+
+                <div class="overlay-buttons">
+                    <button class="btn-remove" onclick="removeSelection()">USUŃ</button>
+                    <button class="btn-confirm" onclick="applySelection()">ZATWIERDŹ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <div id="auto-driff-overlay" class="overlay hidden">
+        <div class="overlay-content" style="width: 550px;">
+            <div class="overlay-header">
+                <h3 style="color: #00adb5;">ROZMIEŚĆ SWOJE DRIFY</h3>
+                <button class="close-btn" onclick="document.getElementById('auto-driff-overlay').classList.add('hidden')">✕</button>
+            </div>
+            
+            <div style="margin-bottom: 15px; color: #aaa; font-size: 13px;">
+                Dodaj drify, które posiadasz w depozycie/plecaku. Algorytm spróbuje rozmieścić je w wolnych slotach ekwipunku, maksymalizując zyski z bonusów ubrań.
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <select id="inv-root-select" style="flex: 2; padding: 8px; background: #222; color: #fff; border: 1px solid #444;">
+                </select>
+                
+                <select id="inv-tier-select" style="flex: 1; padding: 8px; background: #222; color: #fff; border: 1px solid #444;" onchange="updateInvMaxLvl()">
+                    <option value="Sub">Subdrif</option>
+                    <option value="Bi">Bidrif</option>
+                    <option value="Magni" selected>Magnidrif</option>
+                    <option value="Arcy">Arcydrif</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #ccc; font-size: 14px;">Poziom:</span>
+                    <input type="number" id="inv-lvl-input" value="1" min="1" max="16" style="width: 60px; padding: 6px; background: #222; color: #fff; border: 1px solid #444; text-align: center;">
+                </div>
+                
+                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="inv-buffer-check" style="width: 18px; height: 18px; accent-color: #00adb5;">
+                    <label for="inv-buffer-check" style="color: #fff; cursor: pointer; font-size: 14px;" title="Rezerwuje pojemność w sprzęcie tak, aby dany drif zmieścił się również po wbiciu wyższej potęgi.">
+                        Zapas pod skok potęgi
+                    </label>
+                </div>
+
+                <button onclick="addDriffToInventory()" style="background: #4caf50; border: none; color: white; padding: 8px 15px; cursor: pointer; font-weight: bold; border-radius: 4px;">DODAJ</button>
+            </div>
+
+            <div id="driff-inventory-list" style="background: #151515; border: 1px solid #333; min-height: 120px; max-height: 200px; overflow-y: auto; padding: 10px; margin-bottom: 15px;">
+            </div>
+
+            <button onclick="packDriffs()" style="background: #00adb5; border: none; color: #000; padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; border-radius: 4px;">
+                UPCHNIJ W EKWIPUNKU
+            </button>
+        </div>
+    </div>
+
+    <div id="report-overlay" class="overlay hidden">
+        <div class="overlay-content" style="width: 500px;">
+            <div class="overlay-header">
+                <h3 style="color: #00ff66;">RAPORT Z OPTYMALIZACJI</h3>
+                <button class="close-btn" onclick="document.getElementById('report-overlay').classList.add('hidden')">✕</button>
+            </div>
+            
+            <div id="report-content" style="color: #ccc; font-size: 14px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+            </div>
+            
+            <button onclick="document.getElementById('report-overlay').classList.add('hidden')" style="margin-top: 15px; background: #333; border: 1px solid #555; color: #fff; padding: 10px; cursor: pointer; width: 100%; border-radius: 4px; font-weight: bold;">
+                ZAMKNIJ
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
