@@ -55,11 +55,11 @@ const ORB_DATA = {
 // ==========================================
 
 const DRIFF_CATEGORIES = {
-    "obrazen": { label: "Modyfikatory Obrażeń", color: "#f44336", roots: ["kalh", "val", "unn", "astah", "abaf", "teld", "band"] },
-    "obrony": { label: "Modyfikatory Obrony", color: "#9c27b0", roots: ["tall", "elen", "grud", "tovi", "grod"] },
-    "redukcji": { label: "Modyfikatory Redukcji", color: "#2196f3", roots: ["jorn", "iori", "faln", "holm", "farid", "alorn"] },
-    "celnosci": { label: "Modyfikatory Celności", color: "#ffeb3b", roots: ["lorb", "oda", "ling", "ulk", "dur"] },
-    "specjalne": { label: "Modyfikatory Specjalne", color: "#4caf50", roots: ["verd", "err", "eras", "lun", "ann", "von", "amad"] }
+    "obrazen": { label: "Obrażenia", color: "#f44336", roots: ["kalh", "val", "unn", "astah", "abaf", "teld", "band"] },
+    "obrony": { label: "Obrona", color: "#9c27b0", roots: ["tall", "elen", "grud", "tovi", "grod"] },
+    "redukcji": { label: "Redukcja", color: "#2196f3", roots: ["jorn", "iori", "faln", "holm", "farid", "alorn"] },
+    "celnosci": { label: "Celność", color: "#ffeb3b", roots: ["lorb", "oda", "ling", "ulk", "dur"] },
+    "specjalne": { label: "Specjalne", color: "#4caf50", roots: ["verd", "err", "eras", "lun", "ann", "von", "amad"] }
 };
 
 const DRIFF_STATS_DATA = {
@@ -120,6 +120,7 @@ let equipment = {};
 let overlayContext = null; 
 let selectedItemData = null;
 let driffInventory = [];
+let autoDriffSelected = { root: null, tier: 'Magni', lvl: 1, buffer: false }; // Stan dla plecaka
 
 // ==========================================
 // 5. INICJALIZACJA KOŁA
@@ -162,7 +163,7 @@ function resetBuild() {
         slotDiv.style.boxShadow = "none";
         slotDiv.innerHTML = `<span style="position:absolute; width:100%; bottom:5px; text-align:center; font-size:9px; color:#555">${slot.label}</span>`;
     });
-    document.getElementById('item-grid').innerHTML = '<p style="color:#555; padding:10px;">Kliknij element na kole...</p>';
+    document.getElementById('item-grid').innerHTML = '<p style="color:#555; padding:10px; grid-column:1/-1;">Kliknij element na kole...</p>';
     document.getElementById('panel-title').innerText = "WYBIERZ SLOT";
 }
 
@@ -199,7 +200,7 @@ function loadBuild() {
 }
 
 // ==========================================
-// 7. WYCENA I PROGI DRIFFÓW (FIXED 12 LVL)
+// 7. WYCENA I PROGI DRIFFÓW
 // ==========================================
 
 function getDriffCost(root, lvl) {
@@ -239,7 +240,7 @@ function getUsedCapacity(slotId) {
 async function openItemList(slotId, label) {
     document.getElementById('panel-title').innerText = `WYBIERZ: ${label}`;
     const grid = document.getElementById('item-grid');
-    grid.innerHTML = '<p style="color:#666; padding:10px;">Wczytywanie...</p>';
+    grid.innerHTML = '<p style="color:#666; padding:10px; grid-column:1/-1;">Wczytywanie...</p>';
     
     try {
         const response = await fetch(`/get_items/${slotId}`);
@@ -247,7 +248,7 @@ async function openItemList(slotId, label) {
         grid.innerHTML = '';
         
         if(Object.keys(items).length === 0) {
-            grid.innerHTML = '<p style="color:#666; padding:10px;">Brak przedmiotów w bazie.</p>';
+            grid.innerHTML = '<p style="color:#666; padding:10px; grid-column:1/-1;">Brak przedmiotów w bazie.</p>';
             return;
         }
 
@@ -265,7 +266,7 @@ async function openItemList(slotId, label) {
         for (const [tierName, tierItems] of Object.entries(tiers)) {
             if (tierItems.length === 0) continue; 
             const header = document.createElement('div');
-            header.style = "grid-column: 1 / -1; color: #00adb5; border-bottom: 1px solid #333; padding-bottom: 5px; margin-top: 15px; font-weight: bold; font-size: 15px;";
+            header.style = "grid-column: 1 / -1; color: #00adb5; border-bottom: 1px dashed #333; padding-bottom: 5px; margin-top: 15px; font-weight: bold; font-size: 15px;";
             header.innerText = tierName;
             grid.appendChild(header);
 
@@ -289,7 +290,7 @@ async function openItemList(slotId, label) {
             });
         }
     } catch (e) {
-        grid.innerHTML = '<p style="color:red; padding:10px;">Błąd połączenia z serwerem.</p>';
+        grid.innerHTML = '<p style="color:red; padding:10px; grid-column:1/-1;">Błąd połączenia z serwerem.</p>';
     }
 }
 
@@ -322,7 +323,7 @@ function renderSlot(slotId) {
         orbHtml = `<img src="/static/orbs/${names.withAp}" onerror="this.src='/static/orbs/${names.simple}'">`;
     }
     html += `<div class="orb-socket" onclick="event.stopPropagation(); openOverlay('orb', '${slotId}', 0)">${orbHtml}</div>`;
-    html += `<div class="star-bar"><div class="star-icon" onclick="setStar('${slotId}','0')" style="color:#d9534f;">✕</div>`;
+    html += `<div class="star-bar"><div class="star-icon" onclick="setStar('${slotId}','0')" style="color:#d9534f; display:flex; align-items:center; font-weight:bold;">✕</div>`;
     ["B1","B2","B3","S1","S2","S3","G1","G2","G3"].forEach(sKey => {
         const c = STARS_CONFIG[sKey];
         html += `<img src="/static/stars/${c.type}.png" class="star-icon ${eq.star===sKey?'active':''}" onclick="event.stopPropagation(); setStar('${slotId}','${sKey}')">`;
@@ -338,6 +339,7 @@ function renderSlot(slotId) {
     });
     slotDiv.innerHTML = html + `</div>`;
     slotDiv.style.borderColor = eq.data.fixed_driffs ? "#ffaa00" : "#00adb5";
+    slotDiv.style.boxShadow = eq.data.fixed_driffs ? "0 0 10px rgba(255,170,0,0.5)" : "none";
 }
 
 function getOrbFilename(tier, root) {
@@ -356,13 +358,15 @@ function moveTooltip(e) {
     let x = e.clientX + 20; let y = e.clientY + 20;
     if(y + tooltip.offsetHeight > window.innerHeight) y = window.innerHeight - tooltip.offsetHeight - 15;
     if(x + tooltip.offsetWidth > window.innerWidth) x = window.innerWidth - tooltip.offsetWidth - 15;
+    if (y < 10) y = 10;
     tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
 }
 
 function showGridTooltip(e, name, data) {
     let isEpic = data.fixed_driffs !== undefined;
     let html = `<div class="${isEpic?'t-epic':'t-cyan'}">"${name}"</div>`;
-    html += `<div class="t-row" style="border-bottom:1px solid #333; padding-bottom:5px;"><span class="t-label">Baza:</span><span class="t-val">Pojemność: ${data.cap||0} | Sloty: ${data.slots||1}</span></div>`;
+    html += `<div class="t-row" style="border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:8px;"><span class="t-label">Baza:</span><span class="t-val">Pojemność: ${data.cap||0} | Sloty: ${data.slots||1}</span></div>`;
+    
     if(isEpic) {
         data.fixed_driffs.forEach(r => {
             const s = DRIFF_STATS_DATA[r];
@@ -370,65 +374,139 @@ function showGridTooltip(e, name, data) {
         });
     }
     if(data.stats) {
-        html += `<div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;"></div>`;
+        html += `<div style="margin-top:10px; border-top:1px dashed #333; padding-top:8px;"></div>`;
         Object.entries(data.stats).forEach(([k,v]) => { if(!k.includes("Wzmocnienie")) html += `<div class="t-row"><span class="t-label">${k}:</span><span class="t-val">${v}</span></div>`; });
     }
     tooltip.innerHTML = html; tooltip.style.display = 'block'; moveTooltip(e);
 }
 
 function showTooltip(e, slotId) {
+    if(!document.getElementById('driff-overlay').classList.contains('hidden')) return;
     const eq = equipment[slotId]; if(!eq) return;
+    
     const conf = STARS_CONFIG[eq.star]; const totalCap = (eq.data.cap||0) + conf.cap;
     let used = 0; eq.driffs.forEach(d => {if(d) used += getDriffCost(d.root, d.lvl)});
     let html = `<div class="${eq.data.fixed_driffs?'t-epic':'t-cyan'}">"${eq.item}"</div>`;
-    html += `<div class="t-row" style="border-bottom:1px solid #333; padding-bottom:5px;"><span class="t-label">Pojemność:</span><span class="t-val" style="color:${used>totalCap?'red':'#fff'}">${used}/${totalCap}</span></div>`;
+    html += `<div class="t-row" style="border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:8px;"><span class="t-label">Pojemność:</span><span class="t-val" style="color:${used>totalCap?'#d9534f':'#00ff66'}">${used}/${totalCap}</span></div>`;
     
+    if(eq.orb) {
+        const s = ORB_DATA[eq.orb.root];
+        if(s) {
+            let oBonus = conf.orb + (eq.data.stats && eq.data.stats["Wzmocnienie orbów"] ? parseInt(eq.data.stats["Wzmocnienie orbów"]) : 0);
+            let bArr = s[eq.orb.tier.toLowerCase()] || [0];
+            let fVal = bArr[Math.min(eq.orb.lvl-1, bArr.length-1)] * (1 + oBonus/100);
+            html += `<div style="margin-top:2px; border-bottom:1px dashed #333; padding-bottom:4px; margin-bottom:4px;"><span style="color:#d000d0; font-size:12px;">${eq.orb.tier}orb ${s.name}</span><div class="t-row"><span class="t-purple">+${fVal.toFixed(2)}${s.unit}</span></div></div>`;
+        }
+    }
+
     eq.driffs.forEach(driff => {
         if(driff) {
             const stats = DRIFF_STATS_DATA[driff.root];
             const tierIdx = TIER_MAP[driff.tier] || 0;
             let baseVal = stats.base[tierIdx] + ((driff.lvl - 1) * stats.inc[tierIdx]);
-            let finalVal = baseVal * (1 + conf.driff / 100);
+            let dBonus = conf.driff + (eq.data.stats && eq.data.stats["Wzmocnienie drifów"] ? parseInt(eq.data.stats["Wzmocnienie drifów"]) : 0);
+            let finalVal = baseVal * (1 + dBonus / 100);
             let bufferVisual = driff.buffer && !driff.locked ? ' <span style="color:#00ff66; font-size:10px;">[Zapas]</span>' : '';
-            html += `<div style="margin-top:2px;"><span style="color:#ffaa00; font-size:12px;">${driff.locked?'🔒 ':''}${driff.tier}drif ${stats.name} (Poz. ${driff.lvl})${bufferVisual}</span><div class="t-row"><span class="t-blue">${finalVal.toFixed(2)}${stats.unit}</span></div></div>`;
+            html += `<div style="margin-top:2px;"><span style="color:#ffaa00; font-size:12px;">${driff.locked?'🔒 ':''}${driff.tier}drif ${stats.name} (Poz. ${driff.lvl})${bufferVisual}</span><div class="t-row"><span class="t-blue">${finalVal>0?'+':''}${finalVal.toFixed(2)}${stats.unit}</span></div></div>`;
         }
     });
 
     if(eq.data.stats) {
-        html += `<div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;"></div>`;
-        Object.entries(eq.data.stats).forEach(([k,v]) => { if(!k.includes("Wzmocnienie")) html += `<div class="t-row"><span class="t-label">${k}:</span><span class="t-val">${v}</span></div>`; });
+        html += `<div style="margin-top:10px; border-top:1px dashed #333; padding-top:8px;"></div>`;
+        Object.entries(eq.data.stats).forEach(([k,v]) => { 
+            if(k.includes("Wzmocnienie")) return;
+            let bVal = parseInt(v.toString().replace('+','').replace(' ',''));
+            if(isNaN(bVal)) { html += `<div class="t-row"><span class="t-label">${k}:</span><span class="t-val">${v}</span></div>`; }
+            else {
+                let perc = (k === "Obrażenia") ? conf.weapon : conf.stats;
+                let bonus = Math.floor(bVal * (perc/100));
+                let total = bVal + bonus;
+                html += `<div class="t-row"><span class="t-label">${k}:</span><span class="t-val">${total>0?'+':''}${total}</span>${bonus>0?`<span class="t-green">(+${bonus})</span>`:''}</div>`;
+            }
+        });
+        if(conf.upgrade>0) html += `<div class="t-row"><span class="t-blue">Wzm. ulepszeń:</span><span class="t-blue">+${conf.upgrade}%</span></div>`;
+        if(conf.orb>0) html += `<div class="t-row"><span class="t-blue">Wzm. orbów:</span><span class="t-blue">+${conf.orb}%</span></div>`;
+        let tD = conf.driff + (eq.data.stats["Wzmocnienie drifów"] ? parseInt(eq.data.stats["Wzmocnienie drifów"]) : 0);
+        if(tD>0) html += `<div class="t-row"><span class="t-blue">Wzm. drifów:</span><span class="t-blue">+${tD}%</span></div>`;
     }
     tooltip.innerHTML = html; tooltip.style.display = 'block'; moveTooltip(e);
 }
 
 function showGlobalTooltip(e) {
-    let dGroups = {}; Object.values(equipment).forEach(eq => {
+    if(!document.getElementById('driff-overlay').classList.contains('hidden') || !document.getElementById('auto-driff-overlay').classList.contains('hidden')) return;
+    
+    let dGroups = {}; let oGroups = {};
+    Object.values(equipment).forEach(eq => {
         if(!eq) return;
+        const conf = STARS_CONFIG[eq.star];
+        
+        if(eq.orb) {
+            const s = ORB_DATA[eq.orb.root];
+            if(s) {
+                let oBonus = conf.orb + (eq.data.stats && eq.data.stats["Wzmocnienie orbów"] ? parseInt(eq.data.stats["Wzmocnienie orbów"]) : 0);
+                let bArr = s[eq.orb.tier.toLowerCase()] || [0];
+                let fVal = bArr[Math.min(eq.orb.lvl-1, bArr.length-1)] * (1 + oBonus/100);
+                oGroups[s.bonus] = (oGroups[s.bonus] || 0) + fVal;
+            }
+        }
+
         eq.driffs.forEach(d => {
             if(d) {
                 const s = DRIFF_STATS_DATA[d.root];
-                let val = (s.base[TIER_MAP[d.tier]] + (d.lvl-1)*s.inc[TIER_MAP[d.tier]]) * (1 + STARS_CONFIG[eq.star].driff/100);
+                let dBonus = conf.driff + (eq.data.stats && eq.data.stats["Wzmocnienie drifów"] ? parseInt(eq.data.stats["Wzmocnienie drifów"]) : 0);
+                let val = (s.base[TIER_MAP[d.tier]] + (d.lvl-1)*s.inc[TIER_MAP[d.tier]]) * (1 + dBonus/100);
                 if(!dGroups[s.name]) dGroups[s.name] = []; dGroups[s.name].push(val);
             }
         });
     });
-    let html = `<div class="t-gold">SPIS MODYFIKATORÓW</div>`;
+
+    let html = `<div class="t-gold" style="border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">SPIS MODYFIKATORÓW</div>`;
+    let hasMods = false;
+
     Object.entries(DRIFF_CATEGORIES).forEach(([k,g]) => {
         let catH = ""; g.roots.forEach(r => {
             const vals = dGroups[DRIFF_STATS_DATA[r].name];
-            if(vals) {
+            if(vals && vals.length > 0) {
                 let p = vals.length>=12 ? 0.5 : DRIFF_PENALTY_TABLE[vals.length] || 1;
                 let sum = vals.reduce((a,b)=>a+b,0) * p;
-                catH += `<div class="t-row"><span class="t-label">${DRIFF_STATS_DATA[r].name}:</span><span class="t-blue">${sum.toFixed(2)}%</span></div>`;
+                let pText = p < 1 ? ` <span style="color:#d9534f; font-size:10px;">(Kara)</span>` : "";
+                catH += `<div class="t-row"><span class="t-label">${DRIFF_STATS_DATA[r].name}${pText}:</span><span class="t-blue">${sum>0?'+':''}${sum.toFixed(2)}%</span></div>`;
             }
         });
-        if(catH) html += `<div class="t-header" style="color:${g.color}">${g.label}</div>` + catH;
+        if(catH) { html += `<div class="t-header" style="color:${g.color}">${g.label}</div>` + catH; hasMods = true; }
     });
+
+    if(Object.keys(oGroups).length > 0) {
+        html += `<div class="t-header" style="color:#d000d0">Bonusy Orbów</div>`;
+        Object.entries(oGroups).forEach(([k,v]) => { html += `<div class="t-row"><span class="t-label">${k}:</span><span class="t-purple">+${v.toFixed(2)}%</span></div>`; });
+        hasMods = true;
+    }
+
+    if(!hasMods) html += `<div style="color:#666; text-align:center; font-style:italic;">Brak aktywnych modyfikatorów</div>`;
     tooltip.innerHTML = html; tooltip.style.display = 'block'; moveTooltip(e);
 }
 
+// NOWY TOOLTIP DLA GRIDU DRIFÓW
+function showDriffTooltip(e, root, tier = 'Magni', lvl = 1) {
+    const stats = DRIFF_STATS_DATA[root];
+    if(!stats) return;
+
+    let tierIdx = TIER_MAP[tier] || 0;
+    let baseVal = stats.base[tierIdx] + ((lvl - 1) * stats.inc[tierIdx]);
+    let color = tier === "Arcy" ? "#d32f2f" : (tier === "Magni" ? "#f57c00" : (tier === "Bi" ? "#1976d2" : "#388e3c"));
+
+    let html = `<div style="color:${color}; font-weight:bold; font-size:16px; margin-bottom:5px; text-align:center; text-shadow:0 0 5px ${color}80;">${tier}drif ${stats.name}</div>`;
+    html += `<div style="color:#aaa; font-size:12px; text-align:center; border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">Poziom statystyk: ${lvl}</div>`;
+    html += `<div class="t-row"><span class="t-label">${stats.name}:</span> <span class="t-blue">${baseVal>0?'+':''}${baseVal.toFixed(2)}${stats.unit}</span></div>`;
+    html += `<div class="t-row" style="margin-top:5px;"><span class="t-label">Koszt w sprzęcie:</span> <span class="t-val">${getDriffCost(root, lvl)}</span></div>`;
+
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    moveTooltip(e);
+}
+
 // ==========================================
-// 11. SYSTEM OVERLAY DRIFFY / ORBY
+// 11. SYSTEM OVERLAY DRIFFY / ORBY (POJEDYNCZE)
 // ==========================================
 
 function openOverlay(mode, slotId, index) {
@@ -467,21 +545,32 @@ function showItems(mode, catK) {
     let allowedT = ["Sub"]; if(rank>=4) allowedT.push("Bi"); if(rank>=7) allowedT.push("Magni"); if(rank>=10) allowedT.push("Arcy");
     allowedT.reverse();
     let roots = (mode === 'driff') ? DRIFF_CATEGORIES[catK].roots : Object.entries(ORB_DATA).filter(([k,v])=>v.type===catK).map(([k,v])=>k);
+    
     allowedT.forEach(t => {
-        const h = document.createElement('h4'); h.innerText = `${t}${mode==='orb'?'orby':'drify'}`; h.style.gridColumn = "1/-1"; listC.appendChild(h);
+        const h = document.createElement('h4'); h.innerText = `${t}${mode==='orb'?'orby':'drify'}`; h.style.gridColumn = "1/-1"; h.style.color="#00adb5"; h.style.borderBottom="1px solid #333";
+        listC.appendChild(h);
         roots.forEach(r => {
             const btn = document.createElement('div'); btn.className = 'driff-option';
             if(mode==='driff' && eq.driffs.some((d,i)=>i!==overlayContext.index && d && d.root===r)) btn.classList.add('disabled');
             const folder = mode==='orb' ? '/static/orbs' : '/static/driffy';
             const fname = mode==='orb' ? getOrbFilename(t,r).withAp : `${t}drif_${r}.png`;
             btn.innerHTML = `<img src="${folder}/${fname}" onerror="this.src='${folder}/${r}.png'">`;
-            if(!btn.classList.contains('disabled')) btn.onclick = () => selectItemOption(mode,t,r,fname);
+            
+            if(!btn.classList.contains('disabled')) {
+                btn.onclick = () => selectItemOption(mode,t,r,fname);
+                if(mode==='driff') {
+                    btn.onmouseenter = (e) => showDriffTooltip(e, r, t, 1);
+                    btn.onmousemove = moveTooltip;
+                    btn.onmouseleave = hideTooltip;
+                }
+            }
             listC.appendChild(btn);
         });
     });
 }
 
 function selectItemOption(mode, tier, root, filename) {
+    hideTooltip();
     selectedItemData = { tier, root, filename, lvl: 1, mode };
     const eq = equipment[overlayContext.slotId];
     if(mode==='driff' && eq.driffs[overlayContext.index]) { selectedItemData.lvl = eq.driffs[overlayContext.index].lvl; selectedItemData.locked = eq.driffs[overlayContext.index].locked; }
@@ -499,8 +588,11 @@ function updateSliderVal(val) {
     if(selectedItemData.mode === 'driff') {
         const cost = getDriffCost(selectedItemData.root, val); const used = getUsedCapacity(overlayContext.slotId);
         const total = (equipment[overlayContext.slotId].data.cap||0) + STARS_CONFIG[equipment[overlayContext.slotId].star].cap;
-        document.getElementById('cap-info').innerHTML = `Pojemność: <span style="color:${(used+cost)>total?'red':'#fff'}">${used+cost}/${total}</span> (Moc: ${cost})`;
+        document.getElementById('cap-info').innerHTML = `Pojemność: <span style="color:${(used+cost)>total?'#d9534f':'#00ff66'}">${used+cost}/${total}</span> (Moc wybranego: ${cost})`;
         confB.disabled = (used+cost) > total; confB.style.opacity = confB.disabled ? 0.5 : 1;
+    } else {
+        document.getElementById('cap-info').innerHTML = '';
+        confB.disabled = false; confB.style.opacity = 1;
     }
 }
 
@@ -512,57 +604,195 @@ function applySelection() {
 
 function removeSelection() {
     const {slotId, index, mode} = overlayContext;
-    if(mode==='driff' && equipment[slotId].driffs[index].locked) return;
+    if(mode==='driff' && equipment[slotId].driffs[index] && equipment[slotId].driffs[index].locked) return;
     if(mode==='orb') equipment[slotId].orb = null; else equipment[slotId].driffs[index] = null;
     renderSlot(slotId); closeOverlay();
 }
 
-function closeOverlay() { document.getElementById('driff-overlay').classList.add('hidden'); overlayContext = null; }
+function closeOverlay() { document.getElementById('driff-overlay').classList.add('hidden'); overlayContext = null; hideTooltip(); }
 
 // ==========================================
-// 12. MÓZG OPERACJI (AUTO-DRIFF MONTE CARLO)
+// 12. NOWY MÓZG: WIZUALNY PLECAK AUTO-DRIFFÓW
 // ==========================================
 
 function openAutoDriffPanel() {
     document.getElementById('auto-driff-overlay').classList.remove('hidden');
-    const sel = document.getElementById('inv-root-select'); sel.innerHTML = '<option disabled selected>Wybierz drif...</option>';
-    Object.entries(DRIFF_CATEGORIES).forEach(([k,c]) => {
-        const g = document.createElement('optgroup'); g.label = c.label;
-        c.roots.forEach(r => { const o = document.createElement('option'); o.value = r; o.innerText = DRIFF_STATS_DATA[r].name; g.appendChild(o); });
-        sel.appendChild(g);
-    });
+    renderAutoDriffTabs();
     renderInventory();
 }
 
-function updateInvMaxLvl() {
-    const t = document.getElementById('inv-tier-select').value; const i = document.getElementById('inv-lvl-input');
-    let m = (t==="Arcy"?21:t==="Magni"?16:t==="Bi"?11:6); i.max = m; if(parseInt(i.value)>m) i.value = m;
+function renderAutoDriffTabs() {
+    const container = document.getElementById('ad-tabs');
+    container.innerHTML = '';
+    
+    Object.entries(DRIFF_CATEGORIES).forEach(([key, cat], idx) => {
+        let tab = document.createElement('div');
+        tab.className = 'ad-tab';
+        if(idx === 0) tab.classList.add('active');
+        tab.innerText = cat.label;
+        tab.onclick = () => {
+            document.querySelectorAll('.ad-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderAutoDriffGrid(key);
+        };
+        container.appendChild(tab);
+        if(idx === 0) renderAutoDriffGrid(key);
+    });
+}
+
+function renderAutoDriffGrid(catKey) {
+    const grid = document.getElementById('ad-grid');
+    grid.innerHTML = '';
+    document.getElementById('ad-controls').classList.add('hidden'); // Ukryj kontrolki przy zmianie karty
+    autoDriffSelected.root = null;
+
+    DRIFF_CATEGORIES[catKey].roots.forEach(root => {
+        let img = document.createElement('img');
+        img.src = `/static/driffy/${root}.png`;
+        img.className = 'ad-driff-icon';
+        
+        img.onclick = () => selectAutoDriffRoot(root);
+        img.onmouseenter = (e) => showDriffTooltip(e, root, autoDriffSelected.tier || 'Magni', 1);
+        img.onmousemove = moveTooltip;
+        img.onmouseleave = hideTooltip;
+        
+        grid.appendChild(img);
+    });
+}
+
+function selectAutoDriffRoot(root) {
+    hideTooltip();
+    autoDriffSelected.root = root;
+    
+    document.querySelectorAll('.ad-driff-icon').forEach(img => {
+        if(img.src.includes(`/${root}.png`)) img.classList.add('selected');
+        else img.classList.remove('selected');
+    });
+
+    document.getElementById('ad-controls').classList.remove('hidden');
+    document.getElementById('ad-preview-name').innerText = DRIFF_STATS_DATA[root].name;
+    
+    setAutoDriffTier(autoDriffSelected.tier);
+}
+
+function setAutoDriffTier(tier) {
+    autoDriffSelected.tier = tier;
+    
+    // Obsługa kolorów przycisków
+    const btns = document.querySelectorAll('.ad-rank-btn');
+    btns.forEach(b => {
+        if(b.innerText.trim() === tier) {
+            b.classList.add('active');
+            if(tier === 'Arcy') b.style.backgroundColor = '#d32f2f';
+            else if(tier === 'Magni') b.style.backgroundColor = '#f57c00';
+            else if(tier === 'Bi') b.style.backgroundColor = '#1976d2';
+            else b.style.backgroundColor = '#388e3c';
+            b.style.color = '#fff'; b.style.borderColor = b.style.backgroundColor;
+        } else {
+            b.classList.remove('active');
+            b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = '';
+        }
+    });
+
+    // Podmiana ikony w podglądzie
+    if(autoDriffSelected.root) {
+        const previewImg = document.getElementById('ad-preview-img');
+        previewImg.src = `/static/driffy/${tier}drif_${autoDriffSelected.root}.png`;
+        previewImg.onerror = function() { this.src = `/static/driffy/${autoDriffSelected.root}.png`; };
+    }
+
+    // Limity paska poziomu
+    let maxLvl = (tier === "Arcy") ? 21 : (tier === "Magni") ? 16 : (tier === "Bi") ? 11 : 6;
+    const slider = document.getElementById('ad-lvl-slider');
+    slider.max = maxLvl;
+    if(autoDriffSelected.lvl > maxLvl) autoDriffSelected.lvl = maxLvl;
+    slider.value = autoDriffSelected.lvl;
+    updateAutoDriffSlider(autoDriffSelected.lvl);
+}
+
+function updateAutoDriffSlider(val) {
+    autoDriffSelected.lvl = parseInt(val);
+    document.getElementById('ad-lvl-display').innerText = val;
 }
 
 function addDriffToInventory() {
-    const r = document.getElementById('inv-root-select').value; const t = document.getElementById('inv-tier-select').value;
-    const l = parseInt(document.getElementById('inv-lvl-input').value); const b = document.getElementById('inv-buffer-check').checked;
-    if(!r) return; driffInventory.push({ id: Math.random(), root: r, tier: t, lvl: l, buffer: b }); renderInventory();
+    if(!autoDriffSelected.root) return;
+    autoDriffSelected.buffer = document.getElementById('ad-buffer-check').checked;
+    
+    driffInventory.push({
+        id: Math.random(),
+        root: autoDriffSelected.root,
+        tier: autoDriffSelected.tier,
+        lvl: autoDriffSelected.lvl,
+        buffer: autoDriffSelected.buffer
+    });
+    
+    // Opcjonalny reset checkboxa po dodaniu
+    document.getElementById('ad-buffer-check').checked = false;
+    renderInventory();
 }
 
-function removeDriffFromInventory(id) { driffInventory = driffInventory.filter(d=>d.id!==id); renderInventory(); }
+function removeDriffFromInventory(id) { 
+    hideTooltip();
+    driffInventory = driffInventory.filter(d=>d.id!==id); 
+    renderInventory(); 
+}
 
 function renderInventory() {
-    const l = document.getElementById('driff-inventory-list'); l.innerHTML = '';
+    const list = document.getElementById('driff-inventory-list');
+    const badge = document.getElementById('ad-count-badge');
+    list.innerHTML = '';
+    
+    badge.innerText = `${driffInventory.length} szt.`;
+    
+    if(driffInventory.length === 0) {
+        list.innerHTML = '<div style="color:#666; text-align:center; padding-top:40px;">Brak drifów w plecaku.<br>Wybierz z siatki powyżej i kliknij DODAJ.</div>';
+        return;
+    }
+
     driffInventory.forEach(d => {
-        const div = document.createElement('div'); div.style = "display:flex; justify-content:space-between; background:#222; padding:5px; margin-bottom:2px; border-radius:3px;";
-        div.innerHTML = `<span>${d.tier}drif ${DRIFF_STATS_DATA[d.root].name} (Lvl ${d.lvl})${d.buffer?' [Zapas]':''}</span><span onclick="removeDriffFromInventory(${d.id})" style="color:red; cursor:pointer;">X</span>`;
-        l.appendChild(div);
+        const color = d.tier === "Arcy" ? "#d32f2f" : (d.tier === "Magni" ? "#f57c00" : (d.tier === "Bi" ? "#1976d2" : "#388e3c"));
+        
+        const div = document.createElement('div');
+        div.className = 'ad-inv-item';
+        div.style.borderLeftColor = color;
+        
+        let buffBadge = d.buffer ? '<span style="background:#333;color:#00ff66;padding:2px 5px;border-radius:3px;margin-left:8px;font-size:10px;font-weight:bold;">+ZAPAS</span>' : '';
+        
+        div.innerHTML = `
+            <div style="display:flex; align-items:center;">
+                <img src="/static/driffy/${d.tier}drif_${d.root}.png" onerror="this.src='/static/driffy/${d.root}.png'">
+                <div>
+                    <div style="font-weight:bold; color:#fff; font-size:14px; text-transform:uppercase;">${DRIFF_STATS_DATA[d.root].name}</div>
+                    <div style="font-size:12px; color:#aaa; margin-top:2px;">
+                        <span style="color:${color}; font-weight:bold;">${d.tier}drif</span> <span style="margin:0 5px;">|</span> Poziom: <span style="color:#00adb5;font-weight:bold;">${d.lvl}</span>
+                        ${buffBadge}
+                    </div>
+                </div>
+            </div>
+            <button onclick="removeDriffFromInventory(${d.id})" style="background:none;border:none;color:#d9534f;font-size:20px;cursor:pointer;font-weight:bold; transition:0.2s;" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">✕</button>
+        `;
+        
+        div.onmouseenter = (e) => showDriffTooltip(e, d.root, d.tier, d.lvl);
+        div.onmousemove = moveTooltip;
+        div.onmouseleave = hideTooltip;
+
+        list.appendChild(div);
     });
 }
 
 function packDriffs() {
-    if(driffInventory.length === 0) return;
-    const btn = document.querySelector('button[onclick="packDriffs()"]');
-    btn.innerText = "🧠 SYMULACJA 50 000 KOMBINACJI..."; btn.style.backgroundColor = "#ffaa00"; btn.style.pointerEvents = "none";
+    if(driffInventory.length === 0) { alert("Plecaczek jest pusty! Dodaj najpierw drify."); return; }
+    const btn = document.getElementById('pack-btn');
+    btn.innerText = "🧠 OBLICZANIE 50 000 KOMBINACJI..."; 
+    btn.style.backgroundColor = "#ffaa00"; 
+    btn.style.pointerEvents = "none";
+    
     setTimeout(() => { 
         runMonteCarlo(); 
-        btn.innerText = "UPCHNIJ W EKWIPUNKU"; btn.style.backgroundColor = "#00adb5"; btn.style.pointerEvents = "auto";
+        btn.innerText = "UPCHNIJ W EKWIPUNKU"; 
+        btn.style.backgroundColor = "#00adb5"; 
+        btn.style.pointerEvents = "auto";
     }, 100);
 }
 
@@ -616,7 +846,7 @@ function runMonteCarlo() {
 // ==========================================
 
 function generateReport(unplaced) {
-    let html = unplaced.length > 0 ? `<div style="color:#d9534f; margin-bottom:10px;">Brak miejsca dla ${unplaced.length} drifów.</div>` : `<div style="color:#00ff66; margin-bottom:10px;">Sukces! Optymalizacja zakończona.</div>`;
+    let html = unplaced.length > 0 ? `<div style="color:#d9534f; margin-bottom:10px; font-weight:bold;">Brak miejsca dla ${unplaced.length} drifów (lub konflikty).</div>` : `<div style="color:#00ff66; margin-bottom:10px; font-weight:bold;">Sukces! Optymalizacja zakończona.</div>`;
     Object.entries(equipment).forEach(([sId, eq]) => {
         if(!eq) return;
         const total = (eq.data.cap||0) + STARS_CONFIG[eq.star].cap;
@@ -626,16 +856,16 @@ function generateReport(unplaced) {
                 let c = getDriffCost(d.root, d.lvl); uPhys += c;
                 if(d.buffer && !d.locked) {
                     let next = getNextPowerLvl(d.lvl, d.tier);
-                    if(next>d.lvl) { let nC = getDriffCost(d.root, next); uSim += nC; bDetails.push(`🔹 ${d.tier}drif ${DRIFF_STATS_DATA[d.root].name} (Zapas pod ${next} lvl: +${nC-c})`); }
+                    if(next>d.lvl) { let nC = getDriffCost(d.root, next); uSim += nC; bDetails.push(`🔹 <span style="color:#fff;">${d.tier}drif ${DRIFF_STATS_DATA[d.root].name}</span>: Zapas pod <b>${next} poz.</b> (+<span style="color:#00ff66;">${nC-c}</span>)`); }
                     else uSim += c;
                 } else uSim += c;
             }
         });
         const remS = total - uSim;
-        html += `<div style="margin-bottom:10px; background:#1a1a1a; padding:8px; border-left:3px solid ${remS<0?'red':'#00ff66'};">`;
-        html += `<strong>${slotsConfig.find(s=>s.id===sId).label} ("${eq.item}")</strong><br>`;
-        html += `<span style="font-size:11px; color:#aaa;">Zajęte: ${uPhys}/${total} | Wolne (z uwzgl. zapasu): <strong style="color:#00ff66;">${remS}</strong></span>`;
-        if(bDetails.length > 0) html += `<div style="font-size:10px; color:#aaa; margin-top:5px; padding-top:5px; border-top:1px dashed #333;">${bDetails.join("<br>")}</div>`;
+        html += `<div style="margin-bottom:10px; background:#1a1a1a; padding:10px; border-radius:4px; border-left:4px solid ${remS<0?'#d9534f':'#00ff66'};">`;
+        html += `<strong style="color:#00adb5;">${slotsConfig.find(s=>s.id===sId).label} ("${eq.item}")</strong><br>`;
+        html += `<span style="font-size:12px; color:#aaa;">Fizycznie zajęte: <span style="color:#fff;">${uPhys}/${total}</span> | Wolne z gwarancją zapasu: <strong style="color:${remS<0?'#d9534f':'#00ff66'};">${remS}</strong></span>`;
+        if(bDetails.length > 0) html += `<div style="font-size:11px; color:#aaa; margin-top:8px; padding-top:8px; border-top:1px dashed #333; line-height:1.4;">${bDetails.join("<br>")}</div>`;
         html += `</div>`;
     });
     document.getElementById('report-content').innerHTML = html;
