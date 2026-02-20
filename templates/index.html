@@ -16,14 +16,14 @@
                     <img src="/static/mod_sum.png" class="summary-icon" onmouseenter="showGlobalTooltip(event)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" alt="Spis Modyfikatorów">
                     
                     <br>
-                    <button onclick="openAutoDriffPanel()" style="margin-top:20px; background: #00adb5; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 0 10px rgba(0,173,181,0.5); pointer-events: auto;">
+                    <button onclick="openAutoDriffPanel()" style="margin-top:20px; background: #00adb5; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 0 15px rgba(0,173,181,0.4); pointer-events: auto; transition: 0.2s;">
                         AUTO-DRIFY
                     </button>
                     
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; pointer-events: auto;">
-                        <button onclick="resetBuild()" style="background: #d9534f; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">RESET</button>
-                        <button onclick="saveBuild()" style="background: #f0ad4e; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">ZAPISZ</button>
-                        <button onclick="loadBuild()" style="background: #5cb85c; color:#fff; border:none; padding:8px 12px; font-weight:bold; cursor:pointer; border-radius:4px;">WCZYTAJ</button>
+                        <button onclick="resetBuild()" class="btn-sm" style="background: #d9534f;">RESET</button>
+                        <button onclick="saveBuild()" class="btn-sm" style="background: #f0ad4e;">ZAPISZ</button>
+                        <button onclick="loadBuild()" class="btn-sm" style="background: #5cb85c;">WCZYTAJ</button>
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
         <div class="right-panel">
             <h2 id="panel-title" style="color:#ffaa00; border-bottom:1px solid #333; padding-bottom:10px;">WYBIERZ SLOT</h2>
             <div class="item-grid" id="item-grid">
-                <p style="color:#555; padding:10px;">Kliknij element na kole...</p>
+                <p style="color:#555; padding:10px; grid-column: 1/-1;">Kliknij element na kole, aby wyświetlić bazę przedmiotów...</p>
             </div>
         </div>
     </div>
@@ -74,48 +74,60 @@
     <div id="tooltip"></div>
 
     <div id="auto-driff-overlay" class="overlay hidden">
-        <div class="overlay-content" style="width: 550px;">
-            <div class="overlay-header">
-                <h3 style="color: #00adb5;">ROZMIEŚĆ SWOJE DRIFY</h3>
+        <div class="overlay-content" style="width: 650px; max-height: 90vh;">
+            <div class="overlay-header" style="margin-bottom: 10px;">
+                <h3 style="color: #00adb5;">WIZUALNY PLECAK DRIFÓW</h3>
                 <button class="close-btn" onclick="document.getElementById('auto-driff-overlay').classList.add('hidden')">✕</button>
             </div>
             
             <div style="margin-bottom: 15px; color: #aaa; font-size: 13px;">
-                Dodaj drify, które posiadasz w depozycie/plecaku. Algorytm spróbuje rozmieścić je w wolnych slotach ekwipunku, maksymalizując zyski z bonusów ubrań.
+                Kliknij ikonę drifa, ustaw jego potęgę i dodaj do plecaka. Algorytm znajdzie dla nich idealne miejsce w ekwipunku.
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <select id="inv-root-select" style="flex: 2; padding: 8px; background: #222; color: #fff; border: 1px solid #444;">
-                </select>
-                
-                <select id="inv-tier-select" style="flex: 1; padding: 8px; background: #222; color: #fff; border: 1px solid #444;" onchange="updateInvMaxLvl()">
-                    <option value="Sub">Subdrif</option>
-                    <option value="Bi">Bidrif</option>
-                    <option value="Magni" selected>Magnidrif</option>
-                    <option value="Arcy">Arcydrif</option>
-                </select>
-            </div>
+            <div id="ad-tabs" class="ad-tabs"></div>
+            
+            <div id="ad-grid" class="ad-grid"></div>
 
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                    <span style="color: #ccc; font-size: 14px;">Poziom:</span>
-                    <input type="number" id="inv-lvl-input" value="1" min="1" max="16" style="width: 60px; padding: 6px; background: #222; color: #fff; border: 1px solid #444; text-align: center;">
+            <div id="ad-controls" class="ad-controls hidden">
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <img id="ad-preview-img" src="" style="width:52px;height:52px;border-radius:50%;border:2px solid #00adb5;background:#000;">
+                    <div style="flex:1;">
+                        <div id="ad-preview-name" style="color:#fff; font-weight:bold; font-size:16px; margin-bottom:5px;">Nazwa</div>
+                        <div class="ad-rank-selector" id="ad-rank-selector">
+                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Sub')">Sub</button>
+                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Bi')">Bi</button>
+                            <button class="ad-rank-btn active" onclick="setAutoDriffTier('Magni')">Magni</button>
+                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Arcy')">Arcy</button>
+                        </div>
+                    </div>
                 </div>
                 
-                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                    <input type="checkbox" id="inv-buffer-check" style="width: 18px; height: 18px; accent-color: #00adb5;">
-                    <label for="inv-buffer-check" style="color: #fff; cursor: pointer; font-size: 14px;" title="Rezerwuje pojemność w sprzęcie tak, aby dany drif zmieścił się również po wbiciu wyższej potęgi.">
-                        Zapas pod skok potęgi
+                <div style="display:flex; align-items:center; gap:15px; margin-top:15px; padding-top:15px; border-top:1px dashed #333;">
+                    <span style="color:#aaa; font-size:14px;">Poziom:</span>
+                    <input type="range" id="ad-lvl-slider" min="1" max="16" value="1" oninput="updateAutoDriffSlider(this.value)" style="flex:1;">
+                    <span id="ad-lvl-display" style="font-size:22px; font-weight:bold; color:#00adb5; width:30px; text-align:right;">1</span>
+                    
+                    <label style="color:#fff; display:flex; align-items:center; gap:6px; cursor:pointer; margin: 0 10px; font-size:13px;" title="Zarezerwuj wolne miejsce w sprzęcie na wbicie wyższej potęgi (np. z x2 na x3).">
+                        <input type="checkbox" id="ad-buffer-check" style="accent-color:#00adb5; width:16px;height:16px;">
+                        Zapas pod próg
                     </label>
+                    
+                    <button onclick="addDriffToInventory()" class="btn-add-inv">DODAJ</button>
                 </div>
-
-                <button onclick="addDriffToInventory()" style="background: #4caf50; border: none; color: white; padding: 8px 15px; cursor: pointer; font-weight: bold; border-radius: 4px;">DODAJ</button>
             </div>
 
-            <div id="driff-inventory-list" style="background: #151515; border: 1px solid #333; min-height: 120px; max-height: 200px; overflow-y: auto; padding: 10px; margin-bottom: 15px;">
+            <hr style="border-color:#222; margin:15px 0;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:end; margin-bottom:8px;">
+                <span style="color:#aaa; font-size:12px; font-weight:bold;">TWÓJ WOREK:</span>
+                <span id="ad-count-badge" style="background:#00adb5; color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px;">0 szt.</span>
+            </div>
+            
+            <div id="driff-inventory-list" class="ad-inventory-list">
+                <div style="color:#555; text-align:center; padding-top:40px;">Brak drifów w plecaku.<br>Wybierz z góry i kliknij DODAJ.</div>
             </div>
 
-            <button onclick="packDriffs()" style="background: #00adb5; border: none; color: #000; padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; border-radius: 4px;">
+            <button id="pack-btn" onclick="packDriffs()" style="background: #00adb5; border: none; color: #000; padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; border-radius: 4px; margin-top:15px; transition:0.2s;">
                 UPCHNIJ W EKWIPUNKU
             </button>
         </div>
