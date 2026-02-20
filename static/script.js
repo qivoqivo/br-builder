@@ -648,8 +648,17 @@ function renderAutoDriffGrid(catKey) {
 
     DRIFF_CATEGORIES[catKey].roots.forEach(root => {
         let img = document.createElement('img');
-        img.src = `/static/driffy/${root}.png`;
+        
+        // POPRAWKA: Próbujemy załadować Magnidrifa (którego na pewno masz w folderze),
+        // a jak go nie ma, wracamy do gołego root.png
+        img.src = `/static/driffy/Magnidrif_${root}.png`;
+        img.onerror = function() { 
+            this.onerror = null; 
+            this.src = `/static/driffy/${root}.png`; 
+        };
+        
         img.className = 'ad-driff-icon';
+        img.setAttribute('data-root', root); // Ułatwia to zaznaczanie ramką
         
         img.onclick = () => selectAutoDriffRoot(root);
         img.onmouseenter = (e) => showDriffTooltip(e, root, autoDriffSelected.tier || 'Magni', 1);
@@ -664,8 +673,9 @@ function selectAutoDriffRoot(root) {
     hideTooltip();
     autoDriffSelected.root = root;
     
+    // POPRAWKA: Szukamy po naszym atrybucie data-root, żeby ramka się poprawnie podświetlała
     document.querySelectorAll('.ad-driff-icon').forEach(img => {
-        if(img.src.includes(`/${root}.png`)) img.classList.add('selected');
+        if(img.getAttribute('data-root') === root) img.classList.add('selected');
         else img.classList.remove('selected');
     });
 
