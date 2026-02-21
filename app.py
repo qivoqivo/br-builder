@@ -19,6 +19,33 @@ MANUAL_FILENAME_FIXES = {
     "Washi": "Washi.png"
 }
 
+
+# DODAJ TO NA GÓRZE app.py (pod MANUAL_FILENAME_FIXES)
+# Cache plików, żeby nie męczyć dysku w pętli
+CACHED_FILES = {
+    'epik': os.listdir(os.path.join(app.root_path, 'static', 'epik')) if os.path.exists(os.path.join(app.root_path, 'static', 'epik')) else [],
+    'rary': os.listdir(os.path.join(app.root_path, 'static', 'rary')) if os.path.exists(os.path.join(app.root_path, 'static', 'rary')) else []
+}
+
+def find_image_file(item_name):
+    # 1. Sprawdź ręczne poprawki
+    if item_name in MANUAL_FILENAME_FIXES:
+        fname = MANUAL_FILENAME_FIXES[item_name]
+        for folder in ['epik', 'rary']:
+            if fname in CACHED_FILES[folder]:
+                return fname, folder
+        return fname, "rary"
+
+    # 2. Szukaj automatycznie w pamięci (nie na dysku!)
+    target = item_name.lower().replace(" ", "").replace("'", "").replace("-", "")
+    for folder in ['epik', 'rary']:
+        for filename in CACHED_FILES[folder]:
+            name_no_ext = os.path.splitext(filename)[0]
+            cleaned_file = name_no_ext.lower().replace(" ", "").replace("_", "").replace("'", "").replace("-", "")
+            if target == cleaned_file or (len(target) > 3 and target in cleaned_file):
+                return filename, folder
+    return "default.png", "rary"
+
 ITEMS_DB = {
     "Derengil": {"rank": 2, "cap": 4, "slots": 1, "type": "Miecz", "stats": {"Waga": "2", "Wartość": "36 000 złota", "Wymagany poziom": "18", "Wymagana siła": "20", "Obrażenia": "66", "Typ obrażeń": "Sieczne", "Siła": "+8", "Zręczność": "+6", "Kondycja": "+40"}},
     "Maiarot": {"rank": 2, "cap": 4, "slots": 1, "type": "Naszyjnik", "stats": {"Waga": "3", "Wartość": "36 000 złota", "Wymagany poziom": "18", "PŻ": "+120", "Odporność uroki": "+20"}},
