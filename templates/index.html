@@ -2,150 +2,199 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Broken Ranks Builder Pro</title>
+    <title>Broken Ranks Builder</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="left-panel">
-            <div class="wheel-container" id="wheel">
-                <div class="center-stats">
-                    <h1>7861</h1>
-                    <p style="color:#666; margin-bottom: 15px;">Moc zestawu</p>
-                    <img src="/static/mod_sum.png" class="summary-icon" onmouseenter="showGlobalTooltip(event)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()" alt="Spis Modyfikatorów">
-                    
-                    <br>
-                    <button onclick="openAutoDriffPanel()" style="margin-top:20px; background: #00adb5; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 0 15px rgba(0,173,181,0.4); pointer-events: auto; transition: 0.2s;">
-                        AUTO-DRIFY
-                    </button>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; pointer-events: auto;">
-                        <button onclick="resetBuild()" class="btn-sm" style="background: #d9534f;">RESET</button>
-                        <button onclick="saveBuild()" class="btn-sm" style="background: #f0ad4e;">ZAPISZ</button>
-                        <button onclick="loadBuild()" class="btn-sm" style="background: #5cb85c;">WCZYTAJ</button>
-                    </div>
+    <div id="toast-msg"></div>
+
+    <nav class="topbar">
+        <div class="logo">
+            <span style="color:#00adb5;">BROKEN RANKS</span> BUILDER
+        </div>
+        <div class="top-actions">
+            <button onclick="saveBuild()" class="btn-nav ghost-btn-cyan">ZAPISZ</button>
+            <button onclick="loadBuild()" class="btn-nav ghost-btn-cyan">WCZYTAJ</button>
+            <div class="nav-divider"></div>
+            <button onclick="resetBuild()" class="btn-nav ghost-btn-red">RESET</button>
+        </div>
+    </nav>
+
+    <div class="main-workspace">
+        
+        <div class="side-panel">
+            <div class="panel-header">STATYSTYKI POSTACI</div>
+            <div id="global-stats-panel" class="stats-content">
                 </div>
-            </div>
         </div>
 
-        <div class="right-panel">
-            <h2 id="panel-title" style="color:#ffaa00; border-bottom:1px solid #333; padding-bottom:10px;">WYBIERZ SLOT</h2>
-            <div class="item-grid" id="item-grid">
-                <p style="color:#555; padding:10px; grid-column: 1/-1;">Kliknij element na kole, aby wyświetlić bazę przedmiotów...</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="driff-overlay" class="overlay hidden">
-        <div class="overlay-content">
-            <div class="overlay-header">
-                <h3 id="overlay-title">WYBIERZ ULEPSZENIE</h3>
-                <button class="close-btn" onclick="closeOverlay()">✕</button>
-            </div>
+        <div class="center-workspace">
             
-            <div class="driff-categories" id="driff-categories"></div>
-            <div class="driff-list" id="driff-list"></div>
+            <div class="center-toolbar-wrapper">
+                <div class="center-toolbar">
+                    <div class="toolbar-item">
+                        <span class="tb-label">POZIOM:</span>
+                        <input type="number" id="char-level" value="1" min="1" max="140" onchange="updateCharLevel(this.value)" class="top-input ghost">
+                    </div>
+                    
+                    <div class="toolbar-item">
+                        <span class="tb-label">KLASA:</span>
+                        <select id="char-class" class="top-select ghost" onchange="updateCharClass(this.value)">
+                            <option value="" disabled selected>Wybierz...</option>
+                            <option value="Barbarzyńca">Barbarzyńca</option>
+                            <option value="Druid">Druid</option>
+                            <option value="Łucznik">Łucznik</option>
+                            <option value="Mag Ognia">Mag Ognia</option>
+                            <option value="Rycerz">Rycerz</option>
+                            <option value="Sheed">Sheed</option>
+                            <option value="Voodoo">Voodoo</option>
+                        </select>
+                    </div>
 
-            <div class="driff-controls" id="driff-controls">
-                <div class="selected-preview">
-                    <img id="preview-img" src="" alt="Driff">
-                    <div>
-                        <div id="preview-name" class="t-gold">Nazwa Driffa</div>
-                        <div style="font-size:12px; color:#aaa;">Ustaw poziom:</div>
+                    <button class="ghost-btn-cyan toggle-drawer-btn" onclick="toggleStatsDrawer()">
+                        ROZDAJ STATYSTYKI (<span id="stat-points-btn">0</span> PKT) ▼
+                    </button>
+
+                    <div class="multiplier-toggle ghost-group">
+                        <button class="mult-btn active" onclick="setMultiplier(1, this)">x1</button>
+                        <button class="mult-btn" onclick="setMultiplier(10, this)">x10</button>
+                        <button class="mult-btn" onclick="setMultiplier(100, this)">x100</button>
+                    </div>
+                    
+                    <div class="toolbar-item" style="margin-left:auto;">
+                        <button onclick="resetStats()" class="ghost-btn-red" style="padding: 6px 12px; font-size: 10px;">RESET STAT.</button>
                     </div>
                 </div>
-                
-                <div class="slider-container">
-                    <input type="range" id="lvl-slider" min="1" max="21" value="1" oninput="updateSliderVal(this.value)">
-                    <span id="lvl-display">1</span>
-                </div>
-                
-                <div id="cap-info">Pojemność: -/-</div>
 
-                <div class="overlay-buttons">
-                    <button class="btn-remove" onclick="removeSelection()">USUŃ</button>
-                    <button class="btn-confirm" onclick="applySelection()">ZATWIERDŹ</button>
+                <div id="stats-drawer" class="stats-drawer hidden">
+                    <div id="top-stat-panel" class="top-bar-grid">
+                        </div>
                 </div>
             </div>
+
+            <div class="wheel-container" id="wheel">
+                <div class="center-character">
+                    <div class="power-display" id="total-power">0</div>
+                    <div class="power-label">POWER</div>
+                    <div class="character-silhouette"></div>
+                </div>
+            </div>
+
+            <div class="center-action-bar">
+                <button onclick="openAutoDriffPanel()" class="ghost-btn-cyan full-width-btn" style="font-size: 14px; padding: 15px;">OPTYMALIZATOR DRIFÓW</button>
+            </div>
         </div>
+
+        <div class="side-panel" id="right-side-panel">
+            
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div id="view-mods" class="smart-view">
+                    <div class="panel-header" style="color:#ffaa00; border-bottom-color:#ffaa00;">AKTYWNE MODYFIKATORY</div>
+                    <div id="global-mods-panel" class="stats-content">
+                        <div style="color:#666; text-align:center; padding: 20px;">Brak włożonych drifów/orbów.</div>
+                    </div>
+                </div>
+
+                <div id="view-items" class="smart-view hidden">
+                    <div class="item-panel-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span id="right-panel-title">WYBIERZ PRZEDMIOT</span>
+                            <button onclick="closeItemSelection()" class="close-panel-btn">✕</button>
+                        </div>
+                        <input type="text" id="item-search" placeholder="Szukaj przedmiotu..." onkeyup="filterItems()" class="top-input ghost" style="width: 100%; box-sizing: border-box; text-align: left;">
+                    </div>
+                    <div class="stats-content" id="right-item-grid" style="padding-top: 5px;"></div>
+                </div>
+            </div>
+            </div>
+
     </div>
 
+    <div class="footer-credit">by Qivo</div>
+
+    <div id="context-menu" class="hidden"></div>
     <div id="tooltip"></div>
 
+    <div id="custom-modal-overlay" class="overlay hidden" style="z-index: 25000;">
+        <div class="overlay-content modal-panel">
+            <div class="modal-header">
+                <h3 id="modal-title">TYTUŁ</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message"></p>
+                <div id="modal-input-container" class="hidden" style="margin-top: 15px;"></div>
+            </div>
+            <div class="modal-actions" id="modal-actions"></div>
+        </div>
+    </div>
+
     <div id="auto-driff-overlay" class="overlay hidden">
-        <div class="overlay-content" style="width: 650px; max-height: 90vh;">
-            <div class="overlay-header" style="margin-bottom: 10px;">
-                <h3 style="color: #00adb5;">WIZUALNY PLECAK DRIFÓW</h3>
-                <button class="close-btn" onclick="document.getElementById('auto-driff-overlay').classList.add('hidden')">✕</button>
-            </div>
-            
-            <div style="margin-bottom: 15px; color: #aaa; font-size: 13px;">
-                Kliknij ikonę drifa, ustaw jego potęgę i dodaj do plecaka. Algorytm znajdzie dla nich idealne miejsce w ekwipunku.
-            </div>
-
-            <div id="ad-tabs" class="ad-tabs"></div>
-            
-            <div id="ad-grid" class="ad-grid"></div>
-
-            <div id="ad-controls" class="ad-controls hidden">
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <img id="ad-preview-img" src="" style="width:52px;height:52px;border-radius:50%;border:2px solid #00adb5;background:#000;">
-                    <div style="flex:1;">
-                        <div id="ad-preview-name" style="color:#fff; font-weight:bold; font-size:16px; margin-bottom:5px;">Nazwa</div>
-                        <div class="ad-rank-selector" id="ad-rank-selector">
-                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Sub')">Sub</button>
-                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Bi')">Bi</button>
-                            <button class="ad-rank-btn active" onclick="setAutoDriffTier('Magni')">Magni</button>
-                            <button class="ad-rank-btn" onclick="setAutoDriffTier('Arcy')">Arcy</button>
-                        </div>
-                    </div>
+        <div class="overlay-content ad-minimal-panel">
+            <div class="ad-top-section">
+                <div class="ad-header">
+                    <h3>OPTYMALIZATOR DRIFÓW</h3>
+                    <button class="ad-close-btn" onclick="document.getElementById('auto-driff-overlay').classList.add('hidden')">✕</button>
                 </div>
                 
-                <div style="display:flex; align-items:center; gap:15px; margin-top:15px; padding-top:15px; border-top:1px dashed #333;">
-                    <span style="color:#aaa; font-size:14px;">Poziom:</span>
-                    <input type="range" id="ad-lvl-slider" min="1" max="16" value="1" oninput="updateAutoDriffSlider(this.value)" style="flex:1;">
-                    <span id="ad-lvl-display" style="font-size:22px; font-weight:bold; color:#00adb5; width:30px; text-align:right;">1</span>
-                    
-                    <label style="color:#fff; display:flex; align-items:center; gap:6px; cursor:pointer; margin: 0 10px; font-size:13px;" title="Zarezerwuj wolne miejsce w sprzęcie na wbicie wyższej potęgi (np. z x2 na x3).">
-                        <input type="checkbox" id="ad-buffer-check" style="accent-color:#00adb5; width:16px;height:16px;">
-                        Zapas pod próg
-                    </label>
-                    
-                    <button onclick="addDriffToInventory()" class="btn-add-inv">DODAJ</button>
+                <div id="ad-tier-selector" class="ad-tier-selector">
+                    <button class="ad-tier-btn ghost-btn" onclick="setAutoDriffTier('Sub')">SUBDRIF</button>
+                    <button class="ad-tier-btn ghost-btn" onclick="setAutoDriffTier('Bi')">BIDRIF</button>
+                    <button class="ad-tier-btn ghost-btn active" onclick="setAutoDriffTier('Magni')">MAGNIDRIF</button>
+                    <button class="ad-tier-btn ghost-btn" onclick="setAutoDriffTier('Arcy')">ARCYDRIF</button>
                 </div>
             </div>
-
-            <hr style="border-color:#222; margin:15px 0;">
             
-            <div style="display:flex; justify-content:space-between; align-items:end; margin-bottom:8px;">
-                <span style="color:#aaa; font-size:12px; font-weight:bold;">TWÓJ WOREK:</span>
-                <span id="ad-count-badge" style="background:#00adb5; color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px;">0 szt.</span>
+            <div class="ad-workspace">
+                <div id="ad-tabs" class="ad-tabs"></div>
+                <div id="ad-grid" class="ad-grid"></div>
             </div>
             
-            <div id="driff-inventory-list" class="ad-inventory-list">
-                <div style="color:#555; text-align:center; padding-top:40px;">Brak drifów w plecaku.<br>Wybierz z góry i kliknij DODAJ.</div>
+            <div id="ad-controls" class="ad-controls hidden ghost-panel">
+                <div class="ad-control-left">
+                    <div class="ad-img-wrapper">
+                        <img id="ad-preview-img" src="">
+                    </div>
+                    <div id="ad-preview-name">NAZWA</div>
+                </div>
+                
+                <div class="ad-control-right">
+                    <span class="ad-lbl">POZIOM:</span>
+                    <input type="range" id="ad-lvl-slider" min="1" max="16" value="1" class="ad-slider" oninput="updateAutoDriffSlider(this.value)">
+                    <span id="ad-lvl-display">1</span>
+                    
+                    <label class="ad-checkbox-container">
+                        <input type="checkbox" id="ad-buffer-check">
+                        <span class="ad-checkmark"></span>
+                        ZAPAS
+                    </label>
+                    <button onclick="addDriffToInventory()" id="btn-add-inv" class="ghost-btn-cyan">DODAJ</button>
+                </div>
             </div>
-
-            <button id="pack-btn" onclick="packDriffs()" style="background: #00adb5; border: none; color: #000; padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; border-radius: 4px; margin-top:15px; transition:0.2s;">
-                UPCHNIJ W EKWIPUNKU
-            </button>
+            
+            <div class="ad-inventory-section">
+                <div class="ad-inventory-header">
+                    <span>TWÓJ WOREK:</span>
+                    <span id="ad-count-badge">0 szt.</span>
+                </div>
+                
+                <div id="driff-inventory-list" class="ad-inventory-list"></div>
+                
+                <button id="pack-btn" onclick="packDriffs()" class="ghost-btn-cyan ad-pack-btn">
+                    UPCHNIJ W EKWIPUNKU
+                </button>
+            </div>
         </div>
     </div>
 
     <div id="report-overlay" class="overlay hidden">
-        <div class="overlay-content" style="width: 500px;">
+        <div class="overlay-content" style="width: 500px; background: rgba(10,10,10,0.95); border: 1px solid #00adb5;">
             <div class="overlay-header">
-                <h3 style="color: #00ff66;">RAPORT Z OPTYMALIZACJI</h3>
+                <h3 style="color: #00adb5; margin:0;">RAPORT Z OPTYMALIZACJI</h3>
                 <button class="close-btn" onclick="document.getElementById('report-overlay').classList.add('hidden')">✕</button>
             </div>
-            
-            <div id="report-content" style="color: #ccc; font-size: 14px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
-            </div>
-            
-            <button onclick="document.getElementById('report-overlay').classList.add('hidden')" style="margin-top: 15px; background: #333; border: 1px solid #555; color: #fff; padding: 10px; cursor: pointer; width: 100%; border-radius: 4px; font-weight: bold;">
-                ZAMKNIJ
-            </button>
+            <div id="report-content" style="color: #ccc; font-size: 14px; max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+            <button onclick="document.getElementById('report-overlay').classList.add('hidden')" class="ghost-btn-cyan" style="width: 100%; margin-top: 15px; padding: 10px;">ZAMKNIJ</button>
         </div>
     </div>
 
